@@ -23,10 +23,10 @@ class Jsonformer:
         prompt: str,
         *,
         debug: bool = False,
-        max_array_length: int = 20,
+        max_array_length: int = 256,
         max_number_tokens: int = 4096,
-        temperature: float = 0.1,
-        max_string_token_length: int = 1024,
+        temperature: float = 1.0,
+        max_string_token_length: int = 2048,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -80,7 +80,9 @@ class Jsonformer:
             if iterations > 3:
                 raise ValueError("Failed to generate a valid number")
 
-            return self.generate_number(temperature=self.temperature * 1.3, iterations=iterations+1)
+            return self.generate_number(
+                temperature=self.temperature * 1.3, iterations=iterations + 1
+            )
 
     def generate_boolean(self) -> bool:
         prompt = self.get_prompt()
@@ -199,7 +201,6 @@ class Jsonformer:
             output = self.model.forward(input_tensor.to(self.model.device))
             logits = output.logits[0, -1]
 
-
             top_indices = logits.topk(30).indices
             sorted_token_ids = top_indices[logits[top_indices].argsort(descending=True)]
 
@@ -208,10 +209,10 @@ class Jsonformer:
 
             for token_id in sorted_token_ids:
                 decoded_token = self.tokenizer.decode(token_id)
-                if ',' in decoded_token:
+                if "," in decoded_token:
                     found_comma = True
                     break
-                if ']' in decoded_token:
+                if "]" in decoded_token:
                     found_close_bracket = True
                     break
 
